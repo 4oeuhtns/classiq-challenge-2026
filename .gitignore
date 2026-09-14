@@ -1,0 +1,37 @@
+# Synthesis cache -- deliberately NOT committed.
+#
+# 375 files, 72 MB, and it grows with every measurement. More importantly it is
+# keyed on the SDK version: cache_key() in oracle/measure.py hashes
+# classiq.__version__ and COMPILER_VERSION alongside the design, so every entry
+# here belongs to classiq 1.28.0 and becomes unreachable the moment you install
+# 1.29.0. It is a speed optimisation, not a record.
+#
+# The record is logs/experiments.jsonl, which IS committed: 595 rows, width,
+# depth, cx and settings for every design ever measured. That file cost about
+# 6.6 hours of cloud time and cannot be regenerated cheaply.
+#
+# To carry the cache to another machine anyway (it tars down to 4 MB):
+#     tar -czf cache.tgz cache/
+# and restore with  tar -xzf cache.tgz  next to the repo. Only worth doing if
+# you pin classiq==1.28.0, which requirements.txt does.
+cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Credentials -- classiq stores an auth token after `classiq.authenticate()`.
+.env
+*.token
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

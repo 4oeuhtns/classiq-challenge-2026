@@ -1,0 +1,15 @@
+# Python 3.13 required. classiq declares Requires-Python >=3.10,<3.14, so a
+# 3.14 environment cannot install it at all -- pip reports "no matching
+# distribution", which reads like a missing package rather than a version wall.
+
+# Pinned on purpose. All 595 rows in logs/experiments.jsonl were measured with
+# 1.28.0, and the proxy in oracle/proxy.py was fitted to those numbers. Mixing
+# SDK versions inside one log silently corrupts the calibration -- see the
+# "SDK-version trap" note in plan.md 0.5. Bump this deliberately, and bump
+# COMPILER_VERSION in oracle/measure.py when you do.
+classiq==1.28.0
+
+numpy
+scipy                 # spearmanr, rankdata -- experiments/fit_proxy.py
+matplotlib            # oracle.mask.draw only; imported lazily inside the function
+qiskit>=2.0,<3        # experiments/handbuilt.py: the gate-level circuit and its checks
