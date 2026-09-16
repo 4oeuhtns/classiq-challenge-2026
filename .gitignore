@@ -35,3 +35,9 @@ env/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# c++ packages
+cpp/vendor/
+cpp/build/
+
+.vscode/
