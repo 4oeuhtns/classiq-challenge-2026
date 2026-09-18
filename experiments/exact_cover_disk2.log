@@ -1,0 +1,126 @@
+Running HiGHS 1.12.0 (git hash: 4f96ee8): Copyright (c) 2025 HiGHS under MIT licence terms
+MIP has 256 rows; 6817 cols; 65792 nonzeros; 6817 integer variables (6561 binary)
+Coefficient ranges:
+  Matrix  [1e+00, 2e+00]
+  Cost    [1e+00, 4e+01]
+  Bound   [1e+00, 1e+02]
+  RHS     [1e+00, 1e+00]
+Presolving model
+256 rows, 6817 cols, 65792 nonzeros  0s
+256 rows, 6817 cols, 65792 nonzeros  0s
+Presolve reductions: rows 256(-0); columns 6817(-0); nonzeros 65792(-0) - Not reduced
+Objective function is integral with scale 1
+
+Solving MIP model with:
+   256 rows
+   6817 cols (6561 binary, 256 integer, 0 implied int., 0 continuous, 0 domain fixed)
+   65792 nonzeros
+
+Src: B => Branching; C => Central rounding; F => Feasibility pump; H => Heuristic;
+     I => Shifting; J => Feasibility jump; L => Sub-MIP; P => Empty MIP; R => Randomized rounding;
+     S => Solve LP; T => Evaluate node; U => Unbounded; X => User solution; Y => HiGHS solution;
+     Z => ZI Round; l => Trivial lower; p => Trivial point; u => Trivial upper; z => Trivial zero
+
+        Nodes      |    B&B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work      
+Src  Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
+
+ J       0       0         0   0.00%   -inf            1001               Large        0      0      0         0     0.3s
+         0       0         0   0.00%   0               1001             100.00%        0      0     11         5     1.3s
+         0       0         0   0.00%   12              1001              98.80%     1393     38   1238       328    81.5s
+         0       0         0   0.00%   105.5258811     1001              89.46%      542    129   1238      5692    86.7s
+         0       0         0   0.00%   145.9483813     1001              85.42%      366    134   1238     12700    91.7s
+         0       0         0   0.00%   172.1361476     1001              82.80%      399    142   1238     18304    96.7s
+         0       0         0   0.00%   188.3105847     1001              81.19%      374    144   1238     22859   101.9s
+         0       0         0   0.00%   188.3811747     1001              81.18%      373    134   1238     28534   229.3s
+
+Symmetry detection completed in 0.0s
+Found 1 generator(s)
+
+       232     231         1   0.00%   188.448772      1001              81.17%      352    134   1335    156992   310.7s
+       766     763         2   0.00%   188.6792461     1001              81.15%      329    138   1339    175401   333.1s
+      1319    1314         3   0.00%   188.6792461     1001              81.15%      310    144   1465    197529   360.3s
+      1819    1812         4   0.00%   190.5401774     1001              80.97%      314    150   1547    223467   382.9s
+      2395    2386         5   0.00%   192.0389318     1001              80.82%      293    150   1572    247638   410.3s
+      3009    2998         6   0.00%   192.0713851     1001              80.81%      291    151   1630    271474   439.0s
+      3597    3584         7   0.00%   192.2005621     1001              80.80%      288    149   1687    294243   467.7s
+      4192    4177         8   0.00%   192.2271536     1001              80.80%      298    150   1726    314450   491.1s
+      4704    4687         9   0.00%   193.2768412     1001              80.69%      295    154   1862    339183   521.1s
+      5203    5184        10   0.00%   193.8539114     1001              80.63%      292    158   1889    365069   552.8s
+
+Restarting search from the root node
+Model after restart has 256 rows, 6817 cols (6561 bin., 256 int., 0 impl., 0 cont., 0 dom.fix.), and 65792 nonzeros
+
+      5203       0         0   0.00%   193.8539114     1001              80.63%      157      0      0    365069   553.3s
+      5203       0         0   0.00%   194.9705229     1001              80.52%      157    131     11    366907   554.9s
+
+        Nodes      |    B&B Tree     |            Objective Bounds              |  Dynamic Constraints |       Work      
+Src  Proc. InQueue |  Leaves   Expl. | BestBound       BestSol              Gap |   Cuts   InLp Confl. | LpIters     Time
+
+      5203       0         0   0.00%   207.9642233     1001              79.22%      258    149     11    369893   560.1s
+
+Symmetry detection completed in 0.0s
+Found 1 generator(s)
+
+      5631     427         1   0.00%   209.9290333     1001              79.03%      285    136     34    388897   572.3s
+      6001     795         2   0.00%   210.4210071     1001              78.98%      307    143     40    408320   583.8s
+      6430    1222         3   0.00%   210.4813891     1001              78.97%      312    144    140    428097   594.8s
+      6431    1222         4   0.00%   210.4813891     1001              78.97%      365    144    140    429292   600.1s
+      6431    1222         4   0.00%   210.4813891     1001              78.97%      365    144    140    429292   600.1s
+
+Solving report
+  Status            Time limit reached
+  Primal bound      1001
+  Dual bound        211
+  Gap               78.92%
+  P-D integral      500.790117335
+  Solution status   feasible
+                    1001 (objective)
+                    0 (bound viol.)
+                    0 (int. viol.)
+                    0 (row viol.)
+  Timing            600.09
+  Max sub-MIP depth 6
+  Nodes             6431
+  Repair LPs        0
+  LP iterations     429292
+                    187878 (strong br.)
+                    30436 (separation)
+                    58717 (heuristics)
+k=8: 256 points, 6561 candidate cubes
+MILP status: Time limit reached. (HiGHS Status 13: Time limit reached)  (success=False)
+solution: 35 cubes, total weight 1001, mip_gap=0.7892107892107892, mip_dual_bound=211.0
+   (0, 0, 0, 0, 0, 0, 0, 1) cost 37
+   (0, 0, 0, 1, 0, 0, 0, 0) cost 37
+   (0, 0, 0, 1, 0, 0, 1, '*') cost 31
+   (0, 0, 0, 1, 1, 0, '*', 0) cost 31
+   (0, 0, 0, 1, '*', 1, 0, 1) cost 31
+   (0, 0, 0, 1, '*', 1, '*', 0) cost 25
+   (0, 0, 1, 1, 0, 0, 0, 1) cost 37
+   (0, 0, 1, 1, '*', '*', 1, 0) cost 25
+   (0, 1, 0, 0, 1, 0, 0, 0) cost 37
+   (0, 1, 0, 0, '*', 0, 0, 1) cost 31
+   (0, 1, 0, 1, 1, 0, 0, 0) cost 37
+   (0, 1, 0, 1, '*', 0, 1, 0) cost 31
+   (0, 1, 0, 1, '*', 1, 0, 1) cost 31
+   (0, '*', 1, 0, 1, 1, 0, 0) cost 31
+   (0, '*', 1, 0, '*', 0, 0, 0) cost 25
+   (0, '*', 1, 0, '*', 0, 0, 1) cost 25
+   (1, 0, 0, 0, 0, 1, 0, 1) cost 37
+   (1, 0, 0, 1, 1, 0, 0, 0) cost 37
+   (1, 0, 0, 1, '*', 1, 0, 1) cost 31
+   (1, 0, 0, 1, '*', 1, 1, 0) cost 31
+   (1, 0, 0, '*', '*', 1, 0, 0) cost 25
+   (1, 1, 0, 0, 1, 0, 0, 0) cost 37
+   (1, 1, 0, 1, 0, 1, 0, 1) cost 37
+   (1, '*', 0, 1, '*', 0, 1, 0) cost 25
+   (1, '*', 1, 0, 1, 1, 0, 0) cost 31
+   (1, '*', 1, 0, '*', 0, 0, 0) cost 25
+   (1, '*', '*', 0, '*', 0, 0, 1) cost 19
+   ('*', 1, 0, 0, '*', 1, 0, 1) cost 25
+   ('*', 1, 0, 1, '*', 1, 1, 0) cost 25
+   ('*', 1, 0, '*', '*', 1, 0, 0) cost 19
+   ('*', '*', 0, 1, '*', 0, 0, 1) cost 19
+   ('*', '*', 1, 0, 0, 0, 1, 1) cost 25
+   ('*', '*', 1, 0, 0, 1, 0, '*') cost 19
+   ('*', '*', 1, 0, 1, 1, 0, 1) cost 25
+   ('*', '*', '*', 0, '*', '*', 1, 0) cost 7

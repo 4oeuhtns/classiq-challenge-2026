@@ -1,0 +1,556 @@
+input clifford+T gates: 3419
+1.new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+6.
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+2.
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+4.
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+4.
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+
+new block
+after full_optimize gates: 11737
+verify: err=5.4e-16 leak=1.5e-16
+full_optimize result: depth=7910 cx=9528

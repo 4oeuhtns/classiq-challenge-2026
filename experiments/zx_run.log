@@ -1,0 +1,5 @@
+original: phase err 1.6e-17 leak 0.0e+00  depth=1923 cx=1251
+clifford+T basis: depth=2459 gates=3419
+after full_reduce + extract: 6688 gates in 18 qubits
+re-verified independently (global-phase-corrected): phase err 2.4e-15  leak 6.4e-17
+PyZX-optimized: depth=4081  cx=3818  (vs original 1923/1251)

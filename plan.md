@@ -726,9 +726,150 @@ Both shapes render correctly in numpy, so the geometry is right and the arithmet
 - **E is the only strategy needing arithmetic.** Adders are affordable where multipliers were not. Genuinely open whether it wins.
 - Re-check the free-mirror condition (II.5) before assuming symmetry helps. Here it does not hold; symmetry buys predicate sharing only.
 
+**Measured, 2026-09-16 — four of seven strategies now have real numbers, all against Disk 1 (225 px) unless noted, hand-built in Qiskit and verified exactly, not estimated:**
+
+| # | Strategy | Depth | CX | Verdict |
+|---|---|---:|---:|---|
+| A | Row staircase | 1167 | 806 | measured — naive, worst of the hand-built options |
+| — | (for reference) GF(2) rank decomposition of the disk alone, not one of A-G but the natural comparison point | 949 | 616 | measured — best of the hand-built options, still 7x the leaderboard's *entire* depth budget |
+| E | Octagon + corrections | 1361 | 967 | measured (core octagon only, before the 12-px correction terms — those can only add cost) — **worse than A**, despite being the "correct," non-separable idea |
+| D | Bounding box + real XAG minimizer (`mockturtle`, cut_rewriting + resubstitution_minmc_withDC, exactly the tool IV.4 recommends) | not built as a circuit | not built as a circuit | reduced Disk 1 to a genuine 10-variable function, minimized to **248 AND gates** — a floor of ~750 CX at 3 CX/Toffoli even under perfect ancilla scheduling, before the recomputation overhead ancilla-constrained scheduling always adds. Not built out as an actual circuit; the AND-count alone already rules it out. |
+| G | XAG + pebbling (`caterpillar`) | — | — | dead end, see findings-2026-09-15.md §10 — fails to find a schedule from pebble_limit 6 up to 36-38, on both the whole logo and a hand-built 139-gate version |
+
+**B, C, F were not run** — given A (their same family, row/column staircases and comparator piles) already lost badly, and F specifically ("comparator rows") is now directly contradicted by a real measurement: a single comparator-based range check costs 150-215 depth even after the same rccx optimization (findings-2026-09-15.md §11), so a comparator *pile* replacing a rectangle pile can only be worse. Not measuring these is a judgment call, not an oversight — the reasoning is written here so it can be challenged.
+
+**Where this leaves Phase 3, provisionally:** every strategy actually measured — A, D, E, G, plus the rank-decomposition point of comparison — lands in the same 250-1400 range for *one* disk (or is ruled out analytically before building), while the entire leaderboard circuit for *all four shapes combined* is 137/561. That consistency across five structurally different techniques is itself informative: it suggests the bottleneck is not "which predicate style" but something about this whole approach to the problem (isolate a shape, build a Boolean circuit for it, XOR it in) that the leaders are not doing. See findings doc for the resulting brainstorm.
+
+**Exit criteria — partially met.** Not all seven strategies were built (B, C, F skipped, reasoning above); a "winner" was found among what was measured (D's floor, or A/rank-decomposition among actual circuits) but none is remotely competitive, so Phase 3's actual goal (a disk circuit that helps close the gap to 137/561) is **not met**. Recommend closing Phase 3 as answered-negatively rather than continuing to grind through B/C/F, and redirecting effort to Phase 3.5 below.
+
+---
+
+## Phase 3.5 — Disjoint-qubit redesign · new, inserted 2026-09-16
+
+**Goal:** Phase 3 closed off "which predicate style is cheapest" as the wrong question — five structurally different techniques (rectangles, rank-decomposition, octagon arithmetic, external XAG minimization, caterpillar pebbling) all failed the same way. This phase attacks a different question directly: **not what a piece costs, but which qubits it is allowed to touch.**
+
+**Why this phase exists, in one number.** Depth and CX tell two different stories once divided by each other:
+
+| | Depth | CX | CX / depth (gates running per layer, on average) |
+|---|---:|---:|---:|
+| Our best (`handbuilt.py`) | 1906 | 1251 | **1.5** |
+| Leaderboard target | 137 | 561 | **4.1** |
+
+With 18 qubits, the hard ceiling is 9 two-qubit gates per layer (every qubit paired, every layer). The leaders run at ~46% of that ceiling; we run at ~17%. CX only improved 2.2x over our design while depth improved nearly 14x — that is not a "cheaper logic" signature, it is a "far better parallel packing" signature. Chase parallelism directly, not another predicate.
+
+**What the literature says, checked directly against source, 2026-09-16 (see findings doc for full citations):**
+- Minimizing depth for an *already-chosen* set of commuting gates is a real, published, current (2026) result: it reduces exactly to graph vertex-coloring (gates = nodes, non-parallelizable pairs = edges). This validates the graph-coloring idea from earlier this session as a legitimate, recognized technique — **but it is a scheduler, not a generator.** It cannot create parallelism between gates that are structurally forced to share a qubit. Confirms Finding 8's clique proof (§8 of the findings doc) is a hard limit of *our current gate choices*, not a scheduling failure — the fix has to happen at the level of which bits get chosen as controls, before any coloring algorithm runs.
+- The generic "switch to the parity/Walsh-Hadamard basis" idea is a confirmed dead end, not just an empirically unsparse one: the actual published depth formula for a dense n-qubit diagonal with no ancilla is **2ⁿ** (~4096 for n=12). Do not revisit this without a genuinely different angle (e.g. real ancilla, or exploiting non-generic structure this specific mask doesn't appear to have — see the direct Walsh-spectrum computation in the findings doc, which found all 4096 coefficients nonzero).
+- Ancilla-assisted parallel CNOT synthesis (O(log n) depth for a purely linear/XOR circuit, using extra ancilla) is real and active research, but applies to *linear* sub-structure only — relevant to the internal carry-chain / still-equal-chain of any comparator or adder we build, not to the AND-heavy backbone. Treat as a constant-factor cleanup, task 4 below, not a primary lever.
+
+**Tasks**
+
+1. **Turn the Finding-8 conflict graph into a design target, not just a diagnostic.** For any candidate decomposition, define each term's *signature* as the set of coordinate bit-positions it actually reads (not how many — which ones). Two terms conflict iff their signatures intersect. The search objective becomes: cover the logo with terms whose signatures are pairwise disjoint or nearly so, even if that costs more terms or a higher per-term price. This is a different optimization target than anything tried in Phase 3, which only ever minimized term count or per-term cost.
+
+2. **Check the theoretical floor before building anything.** A term touching only $k$ of the 12 coordinate bits can distinguish at most $2^{12-k}$ cells' worth of pattern per fixed setting of those $k$ bits. Work out, for this specific logo (1097 scattered pixels across 4 shapes with the bounding boxes already measured in Part III), whether a covering with genuinely small, mostly-disjoint signatures can exist at all, or whether the shapes are simply too large/overlapping in coordinate-bit space for that to be possible. **If the floor check rules it out, stop and write that up as a clean negative result** — a proof the whole avenue is closed is as valuable as a positive result, and cheaper than finding out by grinding through constructions that can't work.
+
+3. **Prototype a block-partitioned design and measure it for real.** Split the x-range into a small number of aligned blocks (e.g. four 16-wide blocks, selected by the top 2 bits) and same for y. Pieces confined to different blocks share only the block-selector bits, not the low bits — a much smaller footprint than the current design's "every piece reads several high bits of both axes." Build it, verify it exactly (statevector check, as everywhere else in this project), and re-run the exact clique/coloring computation from Finding 8 on the new gate list to see whether the clique number actually drops below 31.
+
+4. **Only if task 3 shows real promise:** revisit every remaining serial ripple-chain (comparator equal-chains, any adders reused from the octagon experiment) and rebuild them with a parallel-prefix / carry-lookahead structure using a few extra ancilla, per the CNOT space-depth trade-off literature. Pure constant-factor cleanup — do this last, not first, since it's wasted effort if task 3 fails.
+
+5. **Re-run graph-coloring for real** (`networkx.coloring`, the same tool Finding 8 used) on whatever gate list task 3/4 produces, to get an actual scheduled circuit and a real transpiled depth/CX number — not just a clique-number estimate.
+
+**Notes**
+- This phase is explicitly a bet that the *shape* of the decomposition (which bits each piece touches) matters more than anything tried in Phase 3. If task 2's floor check or task 3's real measurement contradicts that bet, the honest move is to say so and stop, not to keep re-trying variations of the same idea.
+- Do not skip task 2. Every Phase 3 strategy was built before checking whether it could plausibly work, and all five failed after real implementation effort. A cheap analytical check first is the lesson of this whole week, not just good practice.
+
 **Exit criteria**
-- All seven strategies measured on the same harness.
-- A winner, plus a one-paragraph explanation of *why*. If the reason is unclear, the measurement is probably wrong.
+- A conflict graph with a clique number measurably below 31 (Finding 8's number for the current design), computed from an actual verified circuit, not a theoretical estimate.
+- A real transpiled depth/CX measurement for that circuit, compared honestly against 1906/1251 (current best) and 137/561 (target).
+- Or, a written negative result from task 2's floor check, closing this phase the same way Phase 3 was closed — with a reason, not a shrug.
+
+**Executed, 2026-09-16 — task 2's floor check, closed negative.** Before building anything, computed, for each of the 12 coordinate bits, the fraction of "conjugate pairs" (cells differing only in that bit) where the target's answer actually changes:
+
+| Bit | x-axis | y-axis |
+|---|---:|---:|
+| bit 0 (LSB) | 2.2% | 3.8% |
+| bit 1 | 6.3% | 7.0% |
+| bit 2 | 10.2% | 18.6% |
+| bit 3 | 12.2% | 26.3% |
+| bit 4 | 21.8% | 38.4% |
+| bit 5 (MSB) | 33.8% | **53.1%** |
+
+This cross-checks independently against the Walsh spectrum already computed for Phase 3's brainstorm: the single-bit `y5` term and the `y4+y5` pair were the 2nd and 3rd largest Walsh coefficients of the whole target function. Both computations agree: the top bits, especially `y5`, are essential to roughly a third to more than half of the grid — not an artifact of the Cube encoding, a property of the target's actual geometry.
+
+**Why this closes the phase.** A term that never reads `y5` gives the same answer at `y` and `y+32` by construction. Since `y5` actually changes the answer 53.1% of the time, any such term is simply wrong on more than half the grid — not a small correction, the majority case. And per the same physical rule established in Finding 1 (findings doc §1): any two terms that both need to consult a bit, for whatever value, cannot occupy the same depth-layer, regardless of technique. Since `y5`/`y4`/`x5` are essential to most of the grid, most terms in *any* decomposition — Cube, comparator, arithmetic, external minimizer, all five already tried in Phase 3 — will need to touch at least one of them, and are then forced to serialize on it. The natural rescue (split the grid at `y=32` into disk-1-only vs. everything else, hoping only a small sliver crosses the boundary) is ruled out by the same 53.1% number before it's worth building: the two halves disagree on more than half of matching positions, not a small correction.
+
+**Conclusion: the disjoint-qubit-sets bet does not pay off for this specific target function, and tasks 3-5 were not attempted** — building a prototype whose success the floor check already rules out would repeat Phase 3's mistake (build first, check feasibility never). This is a genuine, evidence-based negative result, not an abandoned effort: **the leaders' real advantage remains unexplained.** Ratio analysis (start of this phase) and five failed predicate-level techniques (Phase 3) plus this closed structural bet leave no candidate theory currently standing. See findings doc for how this should reframe the next round of brainstorming — likely toward reconsidering whether the leaders' 18-qubit-width assumption, or the assumption that the whole 1097-pixel set is built as one designed object rather than something with an exploitable non-geometric regularity, needs to be questioned next.
+
+---
+
+## Phase 3.6 — Literature-seeded ideas, sanity-checked · new, inserted 2026-09-16
+
+**Goal:** a broad literature search (see `findings-2026-09-16.md` for the full trail)
+turned up several papers that looked, on a first read, like they might explain the
+leaderboard's result. Because the first exciting-looking claim from that search did
+not survive a careful second read, every idea from it was checked either against its
+own paper's stated reasoning or against this project's own prior measurements before
+being allowed onto this task list. Most did not survive that check. This phase
+covers only what did.
+
+**What was checked and set aside, with reasons (full detail in the findings doc):**
+- A "nearly optimal Boolean oracle" depth formula that happened to land at ≈228 for
+  our exact parameters — exciting on paper, but a careful re-read found the paper's
+  own proof does not explain why the depth isn't multiplied by the number of
+  sequential iterations its own construction describes. Not to be trusted or built
+  on until someone reads the actual proof, not a summary of it.
+- An ILP-based exact "parallelotope" (== our `Cube`) covering tool claiming 56-81%
+  CNOT reduction over ESOP/XAG — on reflection, this is optimizing within the same
+  sum-of-Cube-terms algebra that Finding 1 (rank-10 floor) and Finding 8 (31-way
+  clique) already proved has hard limits for this specific target's geometry. An
+  exact solver could still beat our rank-10 decomposition's cost incrementally, but
+  there's no reason grounded in what's already been proven to expect it to escape
+  the established ceiling. Worth a bounded, cheap check (task 1 below) rather than
+  adopting the tool wholesale.
+- A CNF-specific ancilla/depth trade-off paper with concrete numbers but no visible
+  method and no accompanying code — would need its own CNF-conversion research
+  first; not actionable without that investment.
+- Generic parity/Walsh-basis synthesis and the mark-white-pixels complement — both
+  directly computed and closed in the findings doc (dead end; worse, respectively).
+
+**What survived, and is worth actually trying:**
+
+**Tasks**
+
+1. **Run an exact (not greedy) cover search on the already-reduced small disk truth tables.** Phase 3's bounding-box reduction already produced genuinely small functions — disk 2's is 8 variables, disk 1's is 10 — cheap enough for an exact or near-exact set-cover search (an ILP solver, or exhaustive search if the space is small enough) to directly test whether a smarter *choice* of cube-cover beats the existing rank-decomposition (949/616 for disk 1) on the same restricted algebra. This directly tests the SSHR skepticism above instead of just asserting it. If an exact search on a search space this much smaller still can't beat rank-decomposition, that closes the "was it just a search-quality problem" question for good.
+
+2. **Prototype conditionally-clean ancilla: borrow x/y coordinate qubits as temporary scratch.** Every design this project has built treats the 12 coordinate qubits as strictly read-only throughout. Pick one bounded, self-contained sub-circuit already built this week (e.g. one comparator's carry chain from the octagon experiment) and rebuild it so that some coordinate bits are temporarily used as extra working scratch mid-computation, then restored exactly before the sub-circuit ends — the same compute/use/uncompute discipline already used everywhere in this project, just applied to qubits that were previously assumed off-limits. This is a genuinely new resource-management idea, independent of whether the paper that inspired it (task above) is otherwise trustworthy, and it only needs to be tested on its own bounded terms — does it reduce cost anywhere — not against any unverified depth formula.
+
+**Notes**
+- Neither task requires trusting an unverified paper claim. Task 1 tests a claim empirically instead of taking it on faith; task 2 borrows a well-defined *mechanism* (temporary reuse of a qubit) without needing the specific depth bound that mechanism was originally claimed to achieve.
+- If both tasks come back negative, that is a meaningful result in its own right: it would mean the literature search, taken as a whole, has not found anything this project's own prior measurements didn't already rule out — and the honest move at that point is to question a more basic assumption (the 18-qubit-width framing, or whether the 1097-pixel set has a non-geometric regularity worth checking) rather than another round of literature search on the same territory.
+
+**Exit criteria**
+- Real measured depth/CX for task 1's exact-cover result on both reduced disk functions, compared against 949/616 (disk 1) and the disk 2 equivalent.
+- Real measured depth/CX for task 2's prototype, compared against the same sub-circuit's original cost.
+- A clear verdict on each, positive or negative, with the reasoning written down — not a shrug.
+
+**Executed, 2026-09-16 — task 1, closed negative, and for a different reason than expected.** Ran the MILP formulation (§ described in the task) against disk 2's 8-variable reduced truth table (256 points, 6561 candidate cubes) with `scipy.optimize.milp` (HiGHS backend), first for 120s, then for a full 600s. Result:
+
+| Time budget | Best found (primal) | Proven lower bound (dual) | Gap |
+|---|---:|---:|---:|
+| 120s | weight 1001 | 189 | 81.1% |
+| 600s | weight 1001 (unchanged) | 211 | 78.9% |
+
+The primal (best actual solution found) **never improved at all between 120s and 600s** — all the extra 480 seconds of branch-and-bound bought was a small improvement to the *lower bound* (189→211), not a better answer. Built and measured the found 35-cube solution anyway (verified exactly correct, phase error 4×10⁻¹⁷): **depth 929, CX 631 — worse than the existing rank-decomposition's 750/470 for the same disk**, and this isn't even a proven optimum.
+
+**Why this closes the task, and what it actually shows.** This is not "we ran out of time before finding the answer" — the solver's own heuristic found its best answer almost instantly (within the first second, per the solve log) and then spent 10 minutes of real branch-and-bound search without displacing it once. That is a strong sign the search landscape here is genuinely hard for a generic MILP, not just slow — consistent with the HRSE paper's own admission (§4.2, findings doc) that this class of problem doesn't approximate well in general. Disk 1's 10-variable version has a candidate space roughly 9x larger (59049 vs 6561 cubes) and would be expected to fare at least as badly, so it was not run — spending another 10+ minutes to very likely confirm the same pattern would repeat exactly the mistake this project keeps learning not to make. **Conclusion: an exact-cover approach to this shape of problem is not just unproven, it's impractical to even attempt with generic tools at a timescale worth spending, and the one real number obtained (929/631) is worse than what's already in hand.**
+
+**Executed, 2026-09-17 — task 2, closed negative.** Built a bounded, isolated test: one 6-control phase-mark gate (compute → apply Z → uncompute, the exact pattern `MCZ` already uses throughout this project), compared two ways to build it —
+
+| Approach | Ancilla used | Depth | CX |
+|---|---|---:|---:|
+| Existing `and_tree` (clean scratch) | 4 clean | **43** | **29** |
+| `synth_mcx_1_dirty_kg24` (Qiskit's real, shipped implementation of Khattar & Gidney's conditionally-clean-ancilla construction, arXiv:2407.17966) | 1 borrowed Y-register qubit | 167 | 90 |
+
+Both verified exactly correct across all 64 control settings, with the borrowed qubit given a fresh random single-qubit rotation each time to make "restored exactly" a real claim rather than a coincidence of testing only `|0⟩`/`|1⟩`. (One bug surfaced and was fixed during this test: the harness initially gave the *clean* scratch ancilla the same random-state treatment meant only for the genuinely-dirty borrowed qubit, which `and_tree` doesn't tolerate — that produced a false correctness failure in the existing, already-trusted `MCX`/`and_tree` code, not a real one. Caught by the exhaustive 64-case check rather than assumed away.)
+
+**Why this closes negative:** the dirty-ancilla technique's real selling point, per its own construction, is minimizing *ancilla count* (1 vs 4) — it does not claim to minimize depth or CX, and here it costs roughly 4x more of both. Our existing design already has room for 4-5 clean scratch qubits when building a single gate like this; the technique's advantage would only show up in a genuinely ancilla-starved sub-problem where 4 clean ancilla *aren't* available, which isn't the situation for an isolated gate like this one. **Both Phase 3.6 tasks are now closed negative.** The literature-seeded ideas that survived the sanity pass in `findings-2026-09-16.md` did not, in the end, beat what this project already had. See that document's closing section for where this leaves the overall search.
 
 ---
 
